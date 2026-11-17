@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1A1A1A">
+<title>QR Scans · Francesca DiSpirito Link Page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Playfair+Display:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#1A1A1A;--ink:#F3EEE7;--soft:rgba(243,238,231,.65);--taupe:#B4B0B0;--line:rgba(180,176,176,.3)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:var(--bg);color:var(--ink);font-family:"Cormorant Garamond",Georgia,serif;
+    display:flex;justify-content:center;padding:48px 22px;-webkit-font-smoothing:antialiased}
+  main{width:100%;max-width:520px;text-align:center}
+  .k{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--taupe);font-weight:500}
+  h1{font-family:"Playfair Display",serif;font-weight:400;font-size:clamp(22px,6vw,28px);letter-spacing:.12em;text-transform:uppercase;margin-top:10px}
+  .sub{font-style:italic;font-size:18px;color:var(--soft);margin-top:6px}
+
+  .hero{margin-top:34px;border:1px solid var(--line);padding:34px 20px 30px;background:rgba(243,238,231,.03)}
+  .hero .num{font-family:"Playfair Display",serif;font-size:clamp(72px,22vw,112px);line-height:1;margin-top:10px}
+  .hero .what{font-style:italic;font-size:19px;color:var(--soft);margin-top:10px}
+
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .card{border:1px solid var(--line);padding:22px 12px;background:rgba(243,238,231,.02)}
+  .card .num{font-family:"Playfair Display",serif;font-size:44px;line-height:1;margin-top:8px}
+  .card .what{font-style:italic;font-size:16px;color:var(--soft);margin-top:8px}
+
+  .meta{margin-top:22px;font-size:16px;color:var(--soft)}
+  button{margin-top:16px;font:inherit;font-size:13px;letter-spacing:.26em;text-transform:uppercase;font-weight:500;
+    background:var(--ink);color:#1A1A1A;border:0;padding:13px 26px;cursor:pointer}
+  button:hover{background:#fff}
+  .note{margin-top:30px;font-size:15px;line-height:1.5;color:var(--soft);border-top:1px solid var(--line);padding-top:18px}
+  .note b{color:var(--ink);font-weight:500}
+  .err{display:none;margin-top:20px;border:1px solid rgba(220,150,140,.5);padding:14px;font-size:16px;color:#f0c8c0}
+  .err.on{display:block}
+  .pulse{animation:p .6s ease}
+  @keyframes p{from{opacity:.3}to{opacity:1}}
+</style>
+</head>
+<body>
+<main>
+  <p class="k">Francesca DiSpirito Styling</p>
+  <h1>Link Page Report</h1>
+  <p class="sub">How many people opened the page</p>
+
+  <section class="hero" aria-live="polite">
+    <p class="k">QR code scans</p>
+    <p class="num" id="scans">–</p>
+    <p class="what">people who scanned the QR code on the business card</p>
+  </section>
+
+  <div class="row" aria-live="polite">
+    <div class="card">
+      <p class="k">Other visits</p>
+      <p class="num" id="other">–</p>
+      <p class="what">opened the link another way</p>
+    </div>
+    <div class="card">
+      <p class="k">All visits</p>
+      <p class="num" id="total">–</p>
+      <p class="what">scans + other visits</p>
+    </div>
+  </div>
+
+  <p class="meta" id="updated">Loading…</p>
+  <button type="button" id="refresh">Refresh now</button>
+  <p class="err" id="err"></p>
+
+  <p class="note">Numbers update by themselves every minute. Each person is counted <b>once per visit</b>, so scanning several times in a row counts as one.<br>
+  Full details (dates, devices, countries) are in the <a href="https://francesca-dispirito-links.goatcounter.com" style="color:var(--ink)">GoatCounter dashboard</a>.</p>
+</main>
+
+<script>
+(function(){
+  var BASE='https://francesca-dispirito-links.goatcounter.com/counter/';
+  var SCAN_PATH='/francesca-links/?src=card';
+  function num(j){var v=(j&&(j.count!=null?j.count:j.count_unique));return parseInt(String(v||'0').replace(/[^0-9]/g,''),10)||0;}
+  function get(path){
+    return fetch(BASE+encodeURIComponent(path)+'.json',{cache:'no-store'}).then(function(r){
+      if(r.status===404)return {count:'0'};          // no visits to that page yet
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.json();
+    });
+  }
+  function set(id,v){var el=document.getElementById(id);el.textContent=v.toLocaleString();el.classList.remove('pulse');void el.offsetWidth;el.classList.add('pulse');}
+  function load(){
+    var err=document.getElementById('err');
+    Promise.all([get(SCAN_PATH),get('TOTAL')]).then(function(res){
+      var scans=num(res[0]),total=Math.max(num(res[1]),scans);
+      set('scans',scans);set('total',total);set('other',total-scans);
+      err.classList.remove('on');
+      document.getElementById('updated').textContent='Last updated: '+new Date().toLocaleString([], {dateStyle:'medium',timeStyle:'short'});
+    }).catch(function(){
+      err.textContent='Couldn’t load the numbers. In GoatCounter → Settings, make sure “Allow adding visitor counts on your website” is ticked and saved, then press Refresh.';
+      err.classList.add('on');
+      document.getElementById('updated').textContent='Not updated';
+    });
+  }
+  document.getElementById('refresh').addEventListener('click',load);
+  load();setInterval(load,60000);
+})();
+</script>
+</body>
+</html>
